@@ -1,95 +1,114 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+'use client';
 
-export default function Home() {
+import { SpaceBetween, Header, Container, Input, Button, Textarea, Tabs, Popover, StatusIndicator, Spinner } from '@cloudscape-design/components';
+import Grid from '@cloudscape-design/components/grid';
+import { useEffect, useState } from 'react';
+import 'ace-builds/css/ace.css';
+import 'ace-builds/css/theme/dawn.css';
+import 'ace-builds/css/theme/tomorrow_night_bright.css';
+import Editor from '@/components/editor/Editor';
+import * as translator from '@/components/translator';
+
+export default function App() {
+  const [loading, setLoading] = useState(true);
+  const [url, setUrl] = useState('');
+
+  useEffect(() => {
+    const init = async () => {
+      return await translator.initialize();
+    };
+    const ff = async () => {
+      if (url =='') return;
+      const res = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({
+          snippet: "import * from 'path';",
+          language: 'java',
+        }),
+      });
+      const js = await res.text();
+      console.log(js);
+    };
+    init()
+      .then((newUrl) => setUrl(newUrl ?? url))
+      .then((_) => setLoading(false))
+      .then((_) => ff());
+
+    return translator.teardown();
+  });
+
+  const translate = async (snippet: string) => {
+    console.log(snippet);
+    const res = await translator.translate(snippet, 'Python');
+    console.log(res);
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    <SpaceBetween size="m">
+      <Container>
+        {loading ? <Spinner /> : <></>}
+        <SpaceBetween size="s">
+          <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+            <div>
+              <Editor onChange={(snippet) => translate(snippet)} />
+            </div>
+            <div>
+              <Grid gridDefinition={[{ colspan: 11 }, { colspan: 1 }]}>
+                <Tabs
+                  tabs={[
+                    {
+                      label: 'Python',
+                      id: 'python',
+                      content: 'aa',
+                    },
+                    {
+                      label: 'Java',
+                      id: 'java',
+                      content: 'Second tab content area',
+                    },
+                    {
+                      label: 'C#',
+                      id: 'csharp',
+                      content: 'Third tab content area',
+                    },
+                    {
+                      label: 'Go',
+                      id: 'go',
+                      content: 'Third tab content area',
+                    },
+                  ]}
+                />
+                <div>
+                  <Popover
+                    size="small"
+                    position="top"
+                    triggerType="custom"
+                    dismissButton={false}
+                    content={<StatusIndicator type="success">[Name of the content] copied</StatusIndicator>}
+                  >
+                    <Button
+                      iconName="copy"
+                      onClick={() => {
+                        navigator.clipboard.writeText('[text to be copied]');
+                      }}
+                    ></Button>
+                  </Popover>
+                </div>
+              </Grid>
+              <Container
+                fitHeight
+                header={
+                  <Header variant="h2" description="Container description">
+                    Container title
+                  </Header>
+                }
+              >
+                Container content
+              </Container>
+            </div>
+          </Grid>
+        </SpaceBetween>
+      </Container>
+    </SpaceBetween>
+  );
 }
