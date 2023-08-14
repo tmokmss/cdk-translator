@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <Script src="/coi-serviceworker.min.js" />
+      <Script src="./coi-serviceworker.min.js" />
       <body className={inter.className}>{children}</body>
     </html>
   );
