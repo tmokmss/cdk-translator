@@ -47,11 +47,13 @@ let processing = false;
 
 export const translate = async (snippet: string, target: string): Promise<string | undefined> => {
   if (processing) return;
-  processing = true;
 
   if (instance === undefined || process === undefined) {
-    throw new Error('instance or process is not initialized');
+    console.log('instance or process is not initialized');
+    return;
   }
+
+  processing = true;
 
   try {
     const writer = process.input.getWriter();

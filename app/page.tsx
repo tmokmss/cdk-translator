@@ -1,6 +1,6 @@
 'use client';
 
-import { SpaceBetween, Button, Tabs, Popover, StatusIndicator, Spinner } from '@cloudscape-design/components';
+import { SpaceBetween, Button, Tabs, Popover, StatusIndicator, Spinner, Box } from '@cloudscape-design/components';
 import Grid from '@cloudscape-design/components/grid';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Editor from '@/components/editor/Editor';
@@ -66,13 +66,14 @@ export default function App() {
     <>
       <SpaceBetween size="m">
         <Header />
-        <SpaceBetween size="s">
-          <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-            <div>
-              <Editor initialValue={initialSnippets.typescript} onChange={(snippet) => onCodeChange(snippet)} />
-            </div>
-            <div>
-              <Grid gridDefinition={[{ colspan: 11 }, { colspan: 1 }]}>
+
+        <Box padding={{ left: 's', right: 's' }}>
+          <SpaceBetween size="xxs">
+            <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+              <div>
+                <Editor initialValue={initialSnippets.typescript} onChange={(snippet) => onCodeChange(snippet)} />
+              </div>
+              <div>
                 <Tabs
                   onChange={(event) => onTabSelectionChange(event.detail.activeTabId)}
                   tabs={[
@@ -98,27 +99,31 @@ export default function App() {
                     },
                   ]}
                 />
-                <div>
-                  <Popover
-                    size="small"
-                    position="top"
-                    triggerType="custom"
-                    dismissButton={false}
-                    content={<StatusIndicator type="success">{activeTab} code copied!</StatusIndicator>}
-                  >
-                    {processing ? <Spinner /> : <></>}
-                    <Button
-                      iconName="copy"
-                      onClick={() => {
-                        navigator.clipboard.writeText(languages[activeTab][0]);
-                      }}
-                    ></Button>
-                  </Popover>
-                </div>
-              </Grid>
-            </div>
-          </Grid>
-        </SpaceBetween>
+                <Grid gridDefinition={[{ colspan: 9 }, { colspan: 1 }, { colspan: 1 }, { colspan: 1 }]}>
+                  <div></div>
+                  <div></div>
+                  <div>{processing || loading ? <Spinner /> : <></>}</div>
+                  <div>
+                    <Popover
+                      size="small"
+                      position="top"
+                      triggerType="custom"
+                      dismissButton={false}
+                      content={<StatusIndicator type="success">{activeTab} code copied!</StatusIndicator>}
+                    >
+                      <Button
+                        iconName="copy"
+                        onClick={() => {
+                          navigator.clipboard.writeText(languages[activeTab][0]);
+                        }}
+                      ></Button>
+                    </Popover>
+                  </div>
+                </Grid>
+              </div>
+            </Grid>
+          </SpaceBetween>
+        </Box>
       </SpaceBetween>
     </>
   );

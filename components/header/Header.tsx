@@ -5,14 +5,14 @@ const Header = () => {
   return (
     <TopNavigation
       identity={{
-        href: '/',
+        href: './',
         title: 'AWS CDK Translator',
       }}
       utilities={[
         {
           type: 'button',
           text: 'GitHub',
-          href: 'https://example.com/',
+          href: 'https://github.com/tmokmss/cdk-translator',
           //   iconName: 'file',
           external: true,
           externalIconAriaLabel: ' (opens in a new tab)',
@@ -26,7 +26,7 @@ const Header = () => {
             {
               id: 'feedback',
               text: 'Feedback',
-              href: 'https://example.com/',
+              href: 'https://github.com/tmokmss/cdk-translator/issues',
               //   iconName: 'envelope',
               external: true,
               externalIconAriaLabel: ' (opens in new tab)',
@@ -34,7 +34,7 @@ const Header = () => {
             {
               id: 'disclaimer',
               text: 'Disclaimer',
-              href: 'https://example.com/',
+              href: 'https://github.com/tmokmss/cdk-translator#disclaimer',
               external: true,
               externalIconAriaLabel: ' (opens in new tab)',
             },

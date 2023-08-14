@@ -1,5 +1,7 @@
+# AWS CDK Translator
+Translate TypeScript CDK code to Python, Java, C#, or Go. Powered by [jsii-rosetta](https://github.com/aws/jsii-rosetta).
 
-## Getting Started
+## Run locally
 
 First, create `components/translator/files.json`.
 
@@ -19,4 +21,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Disclaimer
+This is my personal project and does not represent any organizations I belong to. 
+I don't guarantee anything about the output of this tool. Use it at your own risk.
