@@ -1,20 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  headers: async () => [
-    {
-      source: '/:path*',
-      headers: [
-        {
-          key: 'Cross-Origin-Embedder-Policy',
-          value: 'require-corp',
-        },
-        {
-          key: 'Cross-Origin-Opener-Policy',
-          value: 'same-origin',
-        },
-      ],
-    },
-  ],
+  output: 'export',
   webpack(config) {
     // h/t https://github.com/securingsincity/react-ace/issues/725#issuecomment-1407356137
     config.module.rules.push({
