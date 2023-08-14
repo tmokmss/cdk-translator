@@ -1,8 +1,5 @@
 import CodeEditor, { CodeEditorProps } from '@cloudscape-design/components/code-editor';
 import { useEffect, useState } from 'react';
-import 'ace-builds/css/ace.css';
-import 'ace-builds/css/theme/dawn.css';
-import 'ace-builds/css/theme/tomorrow_night_bright.css';
 
 type EditorProps = {
   onChange: (value: string) => void;
@@ -16,7 +13,10 @@ const Editor = (props: EditorProps) => {
   useEffect(() => {
     async function loadAce() {
       const ace = await import('ace-builds');
-      // await import('ace-builds/webpack-resolver');
+      await import('ace-builds/webpack-resolver');
+      await import('ace-builds/src-noconflict/ace');
+      await import('ace-builds/src-noconflict/theme-dawn');
+      await import('ace-builds/src-noconflict/theme-tomorrow_night_bright');
       ace.config.set('useStrictCSP', true);
 
       return ace;

@@ -1,0 +1,18 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "build": "npx esbuild main.ts --minify --outfile=main.js",
+    "copy": "npm run build &&  npx esbuild build.ts --outfile=build.js && node build.js",
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.91.0",
+    "jsii-rosetta": "^5.1.8"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.1"
+  }
+}

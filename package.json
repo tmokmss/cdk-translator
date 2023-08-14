@@ -18,9 +18,14 @@
     "ace-builds": "^1.24.0",
     "eslint": "8.47.0",
     "eslint-config-next": "13.4.13",
+    "file-loader": "^6.2.0",
     "next": "13.4.13",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-syntax-highlighter": "^15.5.0",
     "typescript": "5.1.6"
+  },
+  "devDependencies": {
+    "@types/react-syntax-highlighter": "^15.5.7"
   }
 }

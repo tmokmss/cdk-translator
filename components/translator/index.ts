@@ -1,7 +1,7 @@
 import { WebContainer, WebContainerProcess } from '@webcontainer/api';
-import { files } from './files';
+import files from './files.json';
 
-// translator machine using jsii-rosetta inside WebContainer
+// translation machine using jsii-rosetta inside WebContainer
 
 let instance: WebContainer | undefined;
 let process: WebContainerProcess | undefined;
@@ -14,7 +14,7 @@ export const initialize = async () => {
     await instance.mount(files);
 
     // Install dependencies
-    const installProcess = await instance.spawn('npm', ['install']);
+    const installProcess = await instance.spawn('npm', ['install', '--omit=dev']);
 
     installProcess.output.pipeTo(
       new WritableStream({
@@ -43,40 +43,84 @@ export const teardown = () => {
   // instance = undefined;
 };
 
+let processing = false;
+
 export const translate = async (snippet: string, target: string): Promise<string> => {
-  await initialize();
+  if (processing) return '';
+  processing = true;
+
+  if (instance === undefined || process === undefined) {
+    throw new Error('instance or process is not initialized');
+  }
+
+  try {
+    const writer = process.input.getWriter();
+    writer.write(JSON.stringify({ snippet, language: target }) + '\n');
+    writer.write('<END_MARKER>' + '\n');
+    writer.releaseLock();
+
+    return new Promise((resolve, reject) => {
+      // the process is exclusively used by this translation.
+      const reader = process!.output.getReader();
+      let started = false;
+      let res = '';
+      const readChunk = ({ done, value }: { done: boolean; value?: string }) => {
+        if (done) {
+          // stream ended for some reason
+          reject(res);
+          return;
+        }
+        if (value !== undefined) {
+          res += value;
+        }
+        if (!started) {
+          // searching for start marker
+          const startMarker = '<START_MARKER>';
+          const search = res.indexOf(startMarker);
+          if (search != -1) {
+            started = true;
+            res = res.substring(search + startMarker.length);
+          }
+        } else {
+          // searching for end marker
+          const endMarker = '<END_MARKER>';
+          if (res.endsWith(endMarker)) {
+            res = res.substring(0, res.length - endMarker.length);
+            reader.releaseLock();
+            resolve(JSON.parse(res).result);
+            // no more read required
+            return;
+          }
+        }
+        reader.read().then(readChunk);
+      };
+      reader.read().then(readChunk);
+    });
+  } catch (e) {
+    console.log(e);
+    throw e;
+  } finally {
+    processing = false;
+  }
+};
+
+const startDevServer = async (): Promise<void> => {
   if (instance === undefined) {
     throw new Error('instance is not initialized');
   }
-  await instance.fs.writeFile('temp.ts', snippet);
-  const process = await instance.spawn('npx', ['jsii-rosetta', 'snippet', 'temp.ts', '-p'], {
+  if (process !== undefined) {
+    console.log('process already initialized.');
+    return;
+  }
+  process = await instance.spawn('npm', ['run', 'start'], {
     env: {
       JSII_SILENCE_WARNING_DEPRECATED_NODE_VERSION: '1',
     },
   });
-  console.log(`translation complete: ${await process.exit}`);
-  return await streamToString(process.output);
-};
 
-const startDevServer = async (): Promise<WebContainerProcess> => {
-  if (instance === undefined) {
-    throw new Error('instance is not initialized');
-  }
-  // Run `npm run start` to start the Express app
-  const process = await instance.spawn('npm', ['run', 'start']);
-  streamToString(process.output);
+  // streamToString(process.output);
 
-  return process;
-  // return new Promise(function (resolve, reject) {
-  //   // Wait for `server-ready` event
-  //   instance!.on('server-ready', (port, url) => {
-  //     console.log(`server is ready: ${url}`);
-  //     resolve(url);
-  //   });
-  //   instance!.on('error', (e) => {
-  //     reject(e);
-  //   });
-  // });
+  return;
 };
 
 // const streamToString = async (stream: ReadableStream<string>) => {
