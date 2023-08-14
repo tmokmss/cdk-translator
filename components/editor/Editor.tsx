@@ -1,31 +1,44 @@
 import CodeEditor, { CodeEditorProps } from '@cloudscape-design/components/code-editor';
 import { useEffect, useState } from 'react';
 
+// https://github.com/cloudscape-design/components/issues/703
+import ace from 'ace-builds';
+import 'ace-builds/src-noconflict/ext-language_tools';
+import 'ace-builds/src-noconflict/ext-searchbox'; // Optional - adds searchbox (Cmd+F)
+import 'ace-builds/css/ace.css';
+
+// Theme - Dawn
+import 'ace-builds/src-noconflict/theme-dawn';
+import 'ace-builds/css/theme/dawn.css';
+
+// Theme - Tomorrow Night Bright
+import 'ace-builds/src-noconflict/theme-tomorrow_night_bright';
+import 'ace-builds/css/theme/tomorrow_night_bright.css';
+
+// Language support - JavaScript
+import 'ace-builds/src-noconflict/mode-typescript';
+import 'ace-builds/src-noconflict/snippets/typescript';
+import 'ace-builds/src-noconflict/snippets/javascript';
+
+import javascriptWorkerPath from 'ace-builds/src-noconflict/worker-javascript';
+import { useWindowSize } from '@/components/editor/dimension';
+ace.config.setModuleUrl('ace/mode/javascript_worker', javascriptWorkerPath);
+
+// CSP-compliant mode support
+// From: https://cloudscape.design/components/code-editor/?tabId=api
+ace.config.set('useStrictCSP', true);
+ace.config.set('loadWorkerFromBlob', false);
+
 type EditorProps = {
   onChange: (value: string) => void;
+  initialValue?: string;
+  loading?: boolean;
 };
 
 const Editor = (props: EditorProps) => {
   const [preferences, setPreferences] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [ace, setAce] = useState<any>();
-
-  useEffect(() => {
-    async function loadAce() {
-      const ace = await import('ace-builds');
-      await import('ace-builds/webpack-resolver');
-      await import('ace-builds/src-noconflict/ace');
-      await import('ace-builds/src-noconflict/theme-dawn');
-      await import('ace-builds/src-noconflict/theme-tomorrow_night_bright');
-      ace.config.set('useStrictCSP', true);
-
-      return ace;
-    }
-
-    loadAce()
-      .then((ace) => setAce(ace))
-      .finally(() => setLoading(false));
-  }, []);
+  const [loading, setLoading] = useState(false);
+  const { height, width } = useWindowSize();
 
   const i18nStrings: CodeEditorProps.I18nStrings = {
     loadingState: 'Loading code editor',
@@ -54,46 +67,16 @@ const Editor = (props: EditorProps) => {
   return (
     <CodeEditor
       ace={ace}
-      language="javascript"
-      value={`import * as path from 'path';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { App, Stack, StackProps } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import * as apigw from 'aws-cdk-lib/aws-apigateway';
-
-class TestStack extends Stack {
-    constructor(scope: Construct, id: string, props?: StackProps) {
-    super(scope, id, props);
-
-    const api = new apigw.RestApi(this, 'cors-api-test', {
-        cloudWatchRole: true,
-    });
-
-    const handler = new lambda.Function(this, 'handler', {
-        runtime: lambda.Runtime.NODEJS_14_X,
-        handler: 'index.handler',
-        code: lambda.Code.fromAsset(path.join(__dirname, 'integ.cors.handler')),
-    });
-
-    const twitch = api.root.addResource('twitch');
-    const backend = new apigw.LambdaIntegration(handler);
-    if (true) {
-        twitch.addMethod('GET', backend); // GET /twitch
-    }
-    twitch.addMethod('GET', backend); // GET /twitch
-    twitch.addMethod('POST', backend); // POST /twitch
-    twitch.addMethod('DELETE', backend); // DELETE /twitch
-    twitch.addCorsPreflight({ allowOrigins: ['https://google.com', 'https://www.test-cors.org'] });
-    }
-}
-`}
+      language="typescript"
+      value={props.initialValue ?? ''}
       preferences={{
-        wrapLines: true,
+        wrapLines: false,
         theme: 'dawn',
       }}
       onPreferencesChange={(e) => setPreferences(e.detail)}
       i18nStrings={i18nStrings}
-      loading={loading}
+      loading={props.loading ?? false}
+      editorContentHeight={height - 180}
       onDelayedChange={(event) => props.onChange(event.detail.value)}
       themes={{ light: ['dawn'], dark: ['tomorrow_night_bright'] }}
     />

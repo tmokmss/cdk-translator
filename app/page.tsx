@@ -1,22 +1,24 @@
 'use client';
 
-import { SpaceBetween, Header, Container, Input, Button, Textarea, Tabs, Popover, StatusIndicator, Spinner } from '@cloudscape-design/components';
+import { SpaceBetween, Button, Tabs, Popover, StatusIndicator, Spinner } from '@cloudscape-design/components';
 import Grid from '@cloudscape-design/components/grid';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Editor from '@/components/editor/Editor';
 import * as translator from '@/components/translator';
+import initialSnippets from '@/components/translator/initialValues.json';
 
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneLight as theme } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import Header from '@/components/header/Header';
+import Snippet from '@/components/snippet/Snippet';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState('python');
-  const [python, setPython] = useState('');
-  const [java, setJava] = useState('');
-  const [csharp, setCsharp] = useState('');
-  const [go, setGo] = useState('');
+  const [snippet, setSnippet] = useState(initialSnippets.typescript);
+  const [python, setPython] = useState(initialSnippets.python);
+  const [java, setJava] = useState(initialSnippets.java);
+  const [csharp, setCsharp] = useState(initialSnippets.csharp);
+  const [go, setGo] = useState(initialSnippets.go);
 
   const languages: Record<string, [string, Dispatch<SetStateAction<string>>]> = {
     python: [python, setPython],
@@ -34,65 +36,65 @@ export default function App() {
     return translator.teardown();
   });
 
-  const translate = async (snippet: string) => {
+  const onTabSelectionChange = async (newTabId: string) => {
+    setActiveTab(newTabId);
+    await translate(snippet, newTabId);
+  };
+
+  const onCodeChange = async (newSnippet: string) => {
+    setSnippet(newSnippet);
+    await translate(newSnippet, activeTab);
+  };
+
+  const translate = async (snippet: string, targetLanguage: string) => {
+    // TODO: use some queue
+    if (processing) return;
     setProcessing(true);
-    console.log(snippet);
-    const res = await translator.translate(snippet, activeTab);
-    languages[activeTab][1](res);
-    setProcessing(false);
+    try {
+      const res = await translator.translate(snippet, targetLanguage);
+      if (res !== undefined) {
+        languages[targetLanguage][1](res);
+      }
+    } catch (e) {
+      throw e;
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
-    <SpaceBetween size="m">
-      <Container>
-        {loading ? <Spinner /> : <></>}
+    <>
+      <SpaceBetween size="m">
+        <Header />
         <SpaceBetween size="s">
           <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
             <div>
-              <Editor onChange={(snippet) => translate(snippet)} />
+              <Editor initialValue={initialSnippets.typescript} onChange={(snippet) => onCodeChange(snippet)} />
             </div>
             <div>
               <Grid gridDefinition={[{ colspan: 11 }, { colspan: 1 }]}>
                 <Tabs
-                  onChange={(event) => setActiveTab(event.detail.activeTabId)}
+                  onChange={(event) => onTabSelectionChange(event.detail.activeTabId)}
                   tabs={[
                     {
                       label: 'Python',
                       id: 'python',
-                      content: (
-                        <Container fitHeight>
-                          <SyntaxHighlighter language="python" style={theme}>
-                            {python}
-                          </SyntaxHighlighter>
-                        </Container>
-                      ),
+                      content: <Snippet language="python" snippet={python} />,
                     },
                     {
                       label: 'Java',
                       id: 'java',
-                      content: (
-                        <Container fitHeight>
-                          <pre>{java}</pre>
-                        </Container>
-                      ),
+                      content: <Snippet language="java" snippet={java} />,
                     },
                     {
                       label: 'C#',
                       id: 'csharp',
-                      content: (
-                        <Container fitHeight>
-                          <pre>{csharp}</pre>
-                        </Container>
-                      ),
+                      content: <Snippet language="csharp" snippet={csharp} />,
                     },
                     {
                       label: 'Go',
                       id: 'go',
-                      content: (
-                        <Container fitHeight>
-                          <pre>{go}</pre>
-                        </Container>
-                      ),
+                      content: <Snippet language="go" snippet={go} />,
                     },
                   ]}
                 />
@@ -117,7 +119,7 @@ export default function App() {
             </div>
           </Grid>
         </SpaceBetween>
-      </Container>
-    </SpaceBetween>
+      </SpaceBetween>
+    </>
   );
 }

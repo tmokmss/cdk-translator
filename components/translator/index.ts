@@ -45,8 +45,8 @@ export const teardown = () => {
 
 let processing = false;
 
-export const translate = async (snippet: string, target: string): Promise<string> => {
-  if (processing) return '';
+export const translate = async (snippet: string, target: string): Promise<string | undefined> => {
+  if (processing) return;
   processing = true;
 
   if (instance === undefined || process === undefined) {
@@ -58,50 +58,53 @@ export const translate = async (snippet: string, target: string): Promise<string
     writer.write(JSON.stringify({ snippet, language: target }) + '\n');
     writer.write('<END_MARKER>' + '\n');
     writer.releaseLock();
-
-    return new Promise((resolve, reject) => {
-      // the process is exclusively used by this translation.
-      const reader = process!.output.getReader();
-      let started = false;
-      let res = '';
-      const readChunk = ({ done, value }: { done: boolean; value?: string }) => {
-        if (done) {
-          // stream ended for some reason
-          reject(res);
-          return;
-        }
-        if (value !== undefined) {
-          res += value;
-        }
-        if (!started) {
-          // searching for start marker
-          const startMarker = '<START_MARKER>';
-          const search = res.indexOf(startMarker);
-          if (search != -1) {
-            started = true;
-            res = res.substring(search + startMarker.length);
-          }
-        } else {
-          // searching for end marker
-          const endMarker = '<END_MARKER>';
-          if (res.endsWith(endMarker)) {
-            res = res.substring(0, res.length - endMarker.length);
-            reader.releaseLock();
-            resolve(JSON.parse(res).result);
-            // no more read required
-            return;
-          }
-        }
-        reader.read().then(readChunk);
-      };
-      reader.read().then(readChunk);
-    });
   } catch (e) {
     console.log(e);
-    throw e;
-  } finally {
     processing = false;
+    throw e;
   }
+
+  const promise: Promise<string> = new Promise((resolve, reject) => {
+    // the process is exclusively used by this translation.
+    const reader = process!.output.getReader();
+    let started = false;
+    let res = '';
+    const readChunk = ({ done, value }: { done: boolean; value?: string }) => {
+      if (done) {
+        // stream ended for some reason
+        reject(res);
+        return;
+      }
+      if (value !== undefined) {
+        res += value;
+      }
+      if (!started) {
+        // searching for start marker
+        const startMarker = '<START_MARKER>';
+        const search = res.indexOf(startMarker);
+        if (search != -1) {
+          started = true;
+          res = res.substring(search + startMarker.length);
+        }
+      } else {
+        // searching for end marker
+        const endMarker = '<END_MARKER>';
+        if (res.endsWith(endMarker)) {
+          res = res.substring(0, res.length - endMarker.length);
+          reader.releaseLock();
+          resolve(JSON.parse(res).result as string);
+          // no more read required
+          return;
+        }
+      }
+      reader.read().then(readChunk);
+    };
+    reader.read().then(readChunk);
+  });
+  promise.finally(() => {
+    processing = false;
+  });
+  return promise;
 };
 
 const startDevServer = async (): Promise<void> => {
