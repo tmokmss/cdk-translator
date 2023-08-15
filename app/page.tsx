@@ -11,7 +11,7 @@ import Header from '@/components/header/Header';
 import Snippet from '@/components/snippet/Snippet';
 
 export default function App() {
-  const [status, setStatus] = useState('testts');
+  const [status, setStatus] = useState('');
   const [activeTab, setActiveTab] = useState('python');
   const [snippet, setSnippet] = useState(initialSnippets.typescript);
   const [python, setPython] = useState(initialSnippets.python);
