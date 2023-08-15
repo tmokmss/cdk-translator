@@ -1,6 +1,12 @@
 # AWS CDK Translator
 Translate TypeScript CDK code to Python, Java, C#, or Go. Powered by [jsii-rosetta](https://github.com/aws/jsii-rosetta).
 
+
+## Architecture
+We run `jsii-rosetta` inside your browser environment, using [WebContainers](https://webcontainers.io/) technology. 
+
+![architecture](docs/architecture.png)
+
 ## Run locally
 
 First, create `components/translator/files.json`.
