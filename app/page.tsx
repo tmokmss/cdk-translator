@@ -1,6 +1,6 @@
 'use client';
 
-import { SpaceBetween, Button, Tabs, Popover, StatusIndicator, Spinner, Box } from '@cloudscape-design/components';
+import { SpaceBetween, Button, Tabs, Popover, StatusIndicator, Spinner, Box, TextContent } from '@cloudscape-design/components';
 import Grid from '@cloudscape-design/components/grid';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Editor from '@/components/editor/Editor';
@@ -11,8 +11,7 @@ import Header from '@/components/header/Header';
 import Snippet from '@/components/snippet/Snippet';
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
+  const [status, setStatus] = useState('testts');
   const [activeTab, setActiveTab] = useState('python');
   const [snippet, setSnippet] = useState(initialSnippets.typescript);
   const [python, setPython] = useState(initialSnippets.python);
@@ -20,45 +19,46 @@ export default function App() {
   const [csharp, setCsharp] = useState(initialSnippets.csharp);
   const [go, setGo] = useState(initialSnippets.go);
 
-  const languages: Record<string, [string, Dispatch<SetStateAction<string>>]> = {
-    python: [python, setPython],
-    java: [java, setJava],
-    csharp: [csharp, setCsharp],
-    go: [go, setGo],
+  const languages: Record<string, { value: string; setter: Dispatch<SetStateAction<string>>; displayName: string }> = {
+    python: { value: python, setter: setPython, displayName: 'Python' },
+    java: { value: java, setter: setJava, displayName: 'Java' },
+    csharp: { value: csharp, setter: setCsharp, displayName: 'C#' },
+    go: { value: go, setter: setGo, displayName: 'Go' },
   };
 
   useEffect(() => {
+    setStatus('initializing the environment...');
     const init = async () => {
       return await translator.initialize();
     };
-    init().then((_) => setLoading(false));
+    init().then((_) => setStatus(''));
 
     return translator.teardown();
-  });
+  }, [setStatus]);
 
   const onTabSelectionChange = async (newTabId: string) => {
     setActiveTab(newTabId);
     await translate(snippet, newTabId);
   };
 
-  const onCodeChange = async (newSnippet: string) => {
+  const onSnippetChange = async (newSnippet: string) => {
     setSnippet(newSnippet);
     await translate(newSnippet, activeTab);
   };
 
   const translate = async (snippet: string, targetLanguage: string) => {
     // TODO: use some queue
-    if (processing) return;
-    setProcessing(true);
+    if (translator.isProcessing()) return;
+    setStatus(`translating to ${languages[targetLanguage].displayName}...`);
     try {
       const res = await translator.translate(snippet, targetLanguage);
       if (res !== undefined) {
-        languages[targetLanguage][1](res);
+        languages[targetLanguage].setter(res);
       }
     } catch (e) {
       throw e;
     } finally {
-      setProcessing(false);
+      setStatus('');
     }
   };
 
@@ -70,40 +70,16 @@ export default function App() {
         <Box padding={{ left: 's', right: 's' }}>
           <SpaceBetween size="xxs">
             <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-              <div>
-                <Editor initialValue={initialSnippets.typescript} onChange={(snippet) => onCodeChange(snippet)} />
-              </div>
-              <div>
-                <Tabs
-                  onChange={(event) => onTabSelectionChange(event.detail.activeTabId)}
-                  tabs={[
-                    {
-                      label: 'Python',
-                      id: 'python',
-                      content: <Snippet language="python" snippet={python} />,
-                    },
-                    {
-                      label: 'Java',
-                      id: 'java',
-                      content: <Snippet language="java" snippet={java} />,
-                    },
-                    {
-                      label: 'C#',
-                      id: 'csharp',
-                      content: <Snippet language="csharp" snippet={csharp} />,
-                    },
-                    {
-                      label: 'Go',
-                      id: 'go',
-                      content: <Snippet language="go" snippet={go} />,
-                    },
-                  ]}
-                />
-                <Grid gridDefinition={[{ colspan: 9 }, { colspan: 1 }, { colspan: 1 }, { colspan: 1 }]}>
-                  <div></div>
-                  <div></div>
-                  <div>{processing || loading ? <Spinner /> : <></>}</div>
-                  <div>
+              <SpaceBetween size="s">
+                <Editor initialValue={initialSnippets.typescript} onChange={(snippet) => onSnippetChange(snippet)} />
+                <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+                  <Box margin={{ top: 'xs' }}>
+                    <SpaceBetween direction="horizontal" size="s">
+                      {status != '' ? <Spinner /> : <></>}
+                      <TextContent>{status}</TextContent>
+                    </SpaceBetween>
+                  </Box>
+                  <Box float="right">
                     <Popover
                       size="small"
                       position="top"
@@ -114,12 +90,24 @@ export default function App() {
                       <Button
                         iconName="copy"
                         onClick={() => {
-                          navigator.clipboard.writeText(languages[activeTab][0]);
+                          navigator.clipboard.writeText(languages[activeTab].value);
                         }}
-                      ></Button>
+                      >
+                        Copy Code
+                      </Button>
                     </Popover>
-                  </div>
+                  </Box>
                 </Grid>
+              </SpaceBetween>
+              <div>
+                <Tabs
+                  onChange={(event) => onTabSelectionChange(event.detail.activeTabId)}
+                  tabs={Object.entries(languages).map(([id, language]) => ({
+                    label: language.displayName,
+                    id,
+                    content: <Snippet language={id} snippet={language.value} />,
+                  }))}
+                />
               </div>
             </Grid>
           </SpaceBetween>

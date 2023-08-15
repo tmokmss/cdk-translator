@@ -45,6 +45,8 @@ export const teardown = () => {
 
 let processing = false;
 
+export const isProcessing = () => processing;
+
 export const translate = async (snippet: string, target: string): Promise<string | undefined> => {
   if (processing) return;
 

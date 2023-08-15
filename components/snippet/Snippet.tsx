@@ -1,4 +1,4 @@
-import { Container } from '@cloudscape-design/components';
+import { Box } from '@cloudscape-design/components';
 
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight as theme } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -10,11 +10,11 @@ type SnippetProps = {
 
 const Snippet = (props: SnippetProps) => {
   return (
-    <Container fitHeight>
+    <Box>
       <SyntaxHighlighter language={props.language} style={theme}>
         {props.snippet}
       </SyntaxHighlighter>
-    </Container>
+    </Box>
   );
 };
 
