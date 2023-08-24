@@ -69,7 +69,7 @@ export default function App() {
 
         <Box padding={{ left: 's', right: 's' }}>
           <SpaceBetween size="xxs">
-            <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+            <Grid gridDefinition={[{ colspan: { default: 12, s: 6 } }, { colspan: { default: 12, s: 6 } }]}>
               <SpaceBetween size="s">
                 <Editor initialValue={initialSnippets.typescript} onChange={(snippet) => onSnippetChange(snippet)} />
                 <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
